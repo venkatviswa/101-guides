@@ -745,6 +745,64 @@ A clean architecture is not "copy everything everywhere." A better pattern is:
 
 Data 360 becomes the binding layer when it maps CRM data, Snowflake data, and lake data into a common business model (DMOs, data graphs, unified individual/account profiles). That model can then power Salesforce actions: personalization, service experiences, marketing journeys, calculated insights, Agentforce grounding, related lists/enrichment, and downstream zero-copy shares back to Snowflake.
 
+### Why Data 360, and not just federation glue?
+
+An architect can reasonably ask: if Snowflake already federates in both directions and Salesforce has APIs, why is Data 360 load-bearing rather than a nice-to-have? Because three capabilities have no cheap substitute — the alternative is to build and maintain them yourself, and duplicate them in every consuming surface.
+
+```mermaid
+flowchart LR
+    subgraph WO ["Without Data 360 — you build the glue"]
+        direction TB
+        SF1[Salesforce CRM] --- CUSTOM
+        SNOW1[Snowflake] --- CUSTOM
+        LAKE1[Lake / files] --- CUSTOM
+        CUSTOM["Custom Apex + APIs<br/>Hand-rolled identity graph<br/>Bespoke retrievers<br/>Two sharing models to reconcile"]
+        CUSTOM --> AF1[Agentforce]
+        CUSTOM --> MC1[Marketing Cloud]
+        CUSTOM --> SVC1[Service]
+        CUSTOM --> PERS1[Personalization]
+    end
+
+    subgraph WITH ["With Data 360"]
+        direction TB
+        SF2[Salesforce CRM] --> D360
+        SNOW2[Snowflake] --> D360
+        LAKE2[Lake / files] --> D360
+        D360["Data 360<br/>IDR · DMOs · data graphs<br/>sharing + FLS · activation · grounding"]
+        D360 --> AF2[Agentforce]
+        D360 --> MC2[Marketing Cloud]
+        D360 --> SVC2[Service]
+        D360 --> PERS2[Personalization]
+    end
+```
+
+**1. Identity resolution across CRM, warehouse, and lake.** Salesforce has no other native way to unify person/account records across CRM, Snowflake, and lake sources under governed match rules. Rolling your own identity graph in Snowflake or Apex means re-implementing match/ranking/survivorship logic *and* re-implementing it consistently wherever Marketing, Service, or Agentforce needs a unified profile. That divergence is where "different systems disagree about who the customer is" bugs come from.
+
+**2. Agentforce grounding and Salesforce-native activation.** Agentforce retrievers, data graphs, calculated insights, segments, and journey activation all consume Data 360 primitives (DMOs, data graphs, unified profiles). If Snowflake data needs to reach Agentforce, Marketing Cloud, Personalization, or Service in a governed way, Data 360 is the supported path. The alternative is custom Apex/API glue that duplicates governance and drifts from CRM sharing over time.
+
+**3. One semantic and permission boundary between warehouse and CRM.** Data 360 is the layer where warehouse-shaped data becomes CRM-shaped data under Salesforce sharing and FLS. Skipping it either pushes CRM semantics into Snowflake (which does not know about profile-based sharing) or pushes warehouse-scale detail into CRM objects (which will not carry the volume). Data 360 is the only place both sides meet under one governance model.
+
+**When it is genuinely optional.** If the only use case is one-way analytical reads *from* Snowflake — BI dashboards, ML training, ad-hoc SQL — with no need for unified identity, no Agentforce grounding, and no Salesforce-native activation, direct Snowflake access is fine and Data 360 is overhead. The moment any of the three capabilities above enter the picture, it flips from optional to load-bearing.
+
+```mermaid
+flowchart TD
+    Q1{Need unified identity across<br/>CRM + Snowflake + lake?}
+    Q2{Agentforce / Marketing / Service<br/>need to consume this data?}
+    Q3{Need Salesforce sharing + FLS<br/>on warehouse-sourced data?}
+    Q4{Business teams author<br/>segments / journeys / insights<br/>on this data?}
+    OK["Direct Snowflake access is fine<br/>Data 360 is optional here"]
+    MUST["Data 360 is load-bearing<br/>no cheap substitute exists"]
+
+    Q1 -->|Yes| MUST
+    Q1 -->|No| Q2
+    Q2 -->|Yes| MUST
+    Q2 -->|No| Q3
+    Q3 -->|Yes| MUST
+    Q3 -->|No| Q4
+    Q4 -->|Yes| MUST
+    Q4 -->|No| OK
+```
+
 Design principle:
 
 > Keep the physical system of record where it belongs. Use Data 360 to harmonize and activate the data. Use Snowflake to analyze and engineer the data at scale. Use zero-copy patterns where they reduce duplication without hiding cost, latency, security, or ownership concerns.
