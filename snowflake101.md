@@ -6,6 +6,27 @@ A quick-reference for the concepts that explain most day-to-day Snowflake work, 
 
 ---
 
+## Contents
+
+- [The mental model in one line](#the-mental-model-in-one-line)
+- [What Snowflake is](#what-snowflake-is)
+- [How Snowflake differs from traditional data warehouses](#how-snowflake-differs-from-traditional-data-warehouses)
+- [Enterprise value proposition](#enterprise-value-proposition)
+- [Core concepts](#core-concepts)
+- [Extending Snowflake: UDFs, UDTFs, stored procedures, and Snowpark](#extending-snowflake-udfs-udtfs-stored-procedures-and-snowpark)
+- [Key SQL](#key-sql)
+- [Gotchas worth knowing early](#gotchas-worth-knowing-early)
+- [Iceberg tables (open table format)](#iceberg-tables-open-table-format)
+- [Cortex — Snowflake's AI layer](#cortex--snowflakes-ai-layer)
+- [Snowflake on AWS — what changes, what does not](#snowflake-on-aws--what-changes-what-does-not)
+- [Snowflake + Salesforce mental model](#snowflake--salesforce-mental-model)
+- [How Snowflake and Salesforce Data 360 interoperate](#how-snowflake-and-salesforce-data-360-interoperate)
+- [Data 360 as a binding layer between Salesforce and Snowflake](#data-360-as-a-binding-layer-between-salesforce-and-snowflake)
+- [Connecting from Python (Jupyter or standalone app)](#connecting-from-python-jupyter-or-standalone-app)
+- [What this 101 intentionally does not cover deeply](#what-this-101-intentionally-does-not-cover-deeply)
+
+---
+
 ## The mental model in one line
 
 **Snowflake separates storage, compute, and cloud services.** Databases, schemas, and tables represent data/storage. Warehouses are compute engines that run queries and DML. Roles decide who can access which objects. For normal table work, your session usually needs a role, warehouse, database, and schema, although fully qualified object names can replace the current database/schema, and some metadata commands do not require a running warehouse.

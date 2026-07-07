@@ -1,5 +1,24 @@
 **LLM for Salesforce Architects**
 
+## Contents
+
+1. [What is a Large Language Model (LLM)?](#1-what-is-a-large-language-model-llm)
+2. [What is a Neural Network, and Why is it Fundamental to LLMs?](#2-what-is-a-neural-network-and-why-is-it-fundamental-to-llms)
+3. [What is Transformer Architecture?](#3-what-is-transformer-architecture)
+4. [Key Parameters of an LLM](#4-key-parameters-of-an-llm)
+5. [Important LLMs (as of Jan 2026)](#5-important-llms-as-of-jan-2026)
+6. [LLM Lifecycle](#6-llm-lifecycle) — architecting, pre-training, fine-tuning, RAG, deployment
+7. [The Current-Era LLM API Surface (Jan 2026)](#7-the-current-era-llm-api-surface-jan-2026)
+8. [Hugging Face and the Open-Weight Ecosystem](#8-hugging-face-and-the-open-weight-ecosystem)
+9. [Prompt Engineering](#9-prompt-engineering)
+10. [Fine-Tuning in Practice](#10-fine-tuning-in-practice)
+11. [Retrieval-Augmented Generation (RAG) — Beyond the Basics](#11-retrieval-augmented-generation-rag--beyond-the-basics)
+12. [Model Deployment Options](#12-model-deployment-options)
+13. [Salesforce and LLMs](#13-salesforce-and-llms)
+14. [BYOLLM vs Hosted — Making the Right Recommendation](#14-byollm-vs-hosted--making-the-right-recommendation)
+
+---
+
 ## **1\. What is a Large Language Model (LLM)?**
 
 A **Large Language Model (LLM)** is a type of **neural network** designed for natural language understanding and generation. It is built on a **transformer architecture**, which allows it to process text in parallel and capture long-range dependencies efficiently.
