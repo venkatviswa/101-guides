@@ -747,7 +747,9 @@ Data 360 becomes the binding layer when it maps CRM data, Snowflake data, and la
 
 ### Why Data 360, and not just federation glue?
 
-An architect can reasonably ask: if Snowflake already federates in both directions and Salesforce has APIs, why is Data 360 load-bearing rather than a nice-to-have? Because three capabilities have no cheap substitute — the alternative is to build and maintain them yourself, and duplicate them in every consuming surface.
+An architect can reasonably ask: if Snowflake already federates in both directions and Salesforce has APIs, why is Data 360 load-bearing rather than a nice-to-have? Because three capabilities have no cheap substitute — the alternative is to build and maintain them yourself, and duplicate them in every consuming Salesforce cloud.
+
+The boxes on the right side of each diagram below are **Salesforce consuming clouds** — the products that need governed, unified data to do their job. Naming is current as of the 2026 Agentforce-branded release: **Agentforce** is the agent platform; **Agentforce Marketing** is the renamed Marketing Cloud; **Service Cloud** and **Sales Cloud** are the operational CRM clouds. All four consume the same unified customer/entity data — the only question is whether Data 360 provides it or whether you build that binding layer yourself.
 
 ```mermaid
 flowchart LR
@@ -758,9 +760,9 @@ flowchart LR
         LAKE1[Lake / files] --- CUSTOM
         CUSTOM["Custom Apex + APIs<br/>Hand-rolled identity graph<br/>Bespoke retrievers<br/>Two sharing models to reconcile"]
         CUSTOM --> AF1[Agentforce]
-        CUSTOM --> MC1[Marketing Cloud]
-        CUSTOM --> SVC1[Service]
-        CUSTOM --> PERS1[Personalization]
+        CUSTOM --> AM1["Agentforce Marketing<br/>(formerly Marketing Cloud)"]
+        CUSTOM --> SVC1[Service Cloud]
+        CUSTOM --> SAL1[Sales Cloud]
     end
 
     subgraph WITH ["With Data 360"]
@@ -770,15 +772,15 @@ flowchart LR
         LAKE2[Lake / files] --> D360
         D360["Data 360<br/>IDR · DMOs · data graphs<br/>sharing + FLS · activation · grounding"]
         D360 --> AF2[Agentforce]
-        D360 --> MC2[Marketing Cloud]
-        D360 --> SVC2[Service]
-        D360 --> PERS2[Personalization]
+        D360 --> AM2["Agentforce Marketing<br/>(formerly Marketing Cloud)"]
+        D360 --> SVC2[Service Cloud]
+        D360 --> SAL2[Sales Cloud]
     end
 ```
 
 **1. Identity resolution across CRM, warehouse, and lake.** Salesforce has no other native way to unify person/account records across CRM, Snowflake, and lake sources under governed match rules. Rolling your own identity graph in Snowflake or Apex means re-implementing match/ranking/survivorship logic *and* re-implementing it consistently wherever Marketing, Service, or Agentforce needs a unified profile. That divergence is where "different systems disagree about who the customer is" bugs come from.
 
-**2. Agentforce grounding and Salesforce-native activation.** Agentforce retrievers, data graphs, calculated insights, segments, and journey activation all consume Data 360 primitives (DMOs, data graphs, unified profiles). If Snowflake data needs to reach Agentforce, Marketing Cloud, Personalization, or Service in a governed way, Data 360 is the supported path. The alternative is custom Apex/API glue that duplicates governance and drifts from CRM sharing over time.
+**2. Agentforce grounding and Salesforce-native activation.** Agentforce retrievers, data graphs, calculated insights, segments, and journey activation all consume Data 360 primitives (DMOs, data graphs, unified profiles). If Snowflake data needs to reach **Agentforce**, **Agentforce Marketing** (the renamed Marketing Cloud), **Service Cloud**, or **Sales Cloud** in a governed way, Data 360 is the supported path. The alternative is custom Apex/API glue that duplicates governance and drifts from CRM sharing over time.
 
 **3. One semantic and permission boundary between warehouse and CRM.** Data 360 is the layer where warehouse-shaped data becomes CRM-shaped data under Salesforce sharing and FLS. Skipping it either pushes CRM semantics into Snowflake (which does not know about profile-based sharing) or pushes warehouse-scale detail into CRM objects (which will not carry the volume). Data 360 is the only place both sides meet under one governance model.
 
