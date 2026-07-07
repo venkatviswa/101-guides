@@ -2,7 +2,7 @@
 
 A quick-reference for the concepts that explain most day-to-day Snowflake work, plus the SQL worth keeping at your fingertips. Generic — swap in your own object names.
 
-> **Naming note:** Salesforce documentation now uses **Data 360** for what many architects still call **Data Cloud**. In this guide, "Data 360 / Data Cloud" means the same product family during the naming transition.
+> **Naming note:** Salesforce documentation is now standardized on **Data 360**. Older names for the same product family — **Data Cloud**, **Customer Data Platform (CDP)**, **C360 Audiences**, and **Genie** — still appear in help articles, Setup UI labels (e.g., "Data Cloud Setup"), permission set names (e.g., "Data Cloud Architect"), and API namespaces (`c360_a_*`, `ssot__`). Where this guide says "Data 360," it refers to the current product; where it quotes a UI label or SQL/permission name that still reads "Data Cloud," that is the on-screen string as of the naming transition, not a separate product.
 
 ---
 
@@ -540,14 +540,14 @@ Architects in the Salesforce ecosystem will naturally ask "is Cortex Snowflake's
 
 | Dimension | Snowflake Cortex | Salesforce Agentforce |
 |---|---|---|
-| Grounding | Warehouse/lakehouse data — structured tables, documents, semantic models | CRM records, Data 360 harmonized profiles, business context |
+| Grounding | Warehouse/lakehouse data — structured tables, documents, Cortex semantic models | CRM records, Data 360 DMOs / data graphs / unified profiles, retrievers over unstructured content |
 | Primary job | Analytical: answer questions over enterprise data, generate SQL, retrieve/synthesize insights | Operational: take actions in business processes — cases, flows, records, customer interactions |
 | Raw LLM access | Yes — direct LLM inference as SQL functions and APIs; model choice per call; fine-tuning in-platform | Abstracted — models power agent reasoning and generative features; you configure agents, topics, and actions rather than raw inference |
 | Modeling/ML | Fine-tuning, forecasting, anomaly detection, classification functions, Snowpark ML | Predictive/generative capabilities surfaced through the platform (Einstein heritage), not a general ML workbench |
 | Governance | Snowflake RBAC, masking, row access policies, audit apply to AI outputs | Salesforce sharing, FLS, Einstein Trust Layer |
 | Typical users | Data engineers, analysts, data scientists, apps via API | Service/sales/marketing users, admins, customers |
 
-So your instinct is right: **Cortex can do more raw modeling and LLM inference** — it exposes the models themselves as SQL-callable primitives and supports fine-tuning — while **Agentforce is the action layer** wired into CRM processes. They are complementary in practice: a common pattern is Snowflake/Cortex preparing and analyzing enterprise data, Data 360 binding it into the customer model, and Agentforce acting on it. Cortex also ships an MCP Server that can connect to external agent platforms including Agentforce, which points at where this is heading: agents on both sides calling each other's tools rather than platforms competing for one agent to rule them all.
+So your instinct is right: **Cortex can do more raw modeling and LLM inference** — it exposes the models themselves as SQL-callable primitives and supports fine-tuning — while **Agentforce is the action layer** wired into CRM processes. They are complementary in practice: a common pattern is Snowflake/Cortex preparing and analyzing enterprise data, Data 360 binding it into the customer model and grounding retrievers, and Agentforce acting on it inside Salesforce processes. Cortex ships an MCP Server, and Agentforce can consume MCP tools as actions, so the direction of travel is cross-platform tool use rather than a single winning agent runtime.
 
 ---
 
@@ -571,7 +571,7 @@ So "an AWS-hosted warehouse" is not a special SQL feature. It is a normal Snowfl
 Snowflake and Salesforce are both metadata-heavy cloud platforms, but they solve different problems.
 
 - **Salesforce CRM** is primarily an operational system of engagement: users, transactions, workflows, records, security, UI, automation, and business processes.
-- **Salesforce Data 360** — formerly Data Cloud — is the Salesforce data and customer-context layer: harmonization, Data Lake Objects, Data Model Objects, identity resolution, calculated insights, segmentation, activation, and agent/customer context.
+- **Salesforce Data 360** — formerly Data Cloud (and before that CDP / C360 Audiences / Genie) — is the Salesforce data and customer-context layer: Data Lake Objects (DLOs), Data Model Objects (DMOs), harmonization and mapping, identity resolution, calculated insights, data graphs, segmentation, activation, and grounding for Agentforce.
 - **Snowflake** is an enterprise analytical data platform: data warehousing, lakehouse/Iceberg, ELT, large-scale analytics, data science access, governed sharing, and multi-tool consumption.
 
 A practical enterprise pattern:
@@ -584,9 +584,9 @@ A practical enterprise pattern:
 |---|---|---|---|
 | Account | Salesforce org | Tenant boundary; users, security, metadata live inside it. | Salesforce org includes CRM apps, automation, UI, and transactions. Snowflake account is primarily data/compute/governance. |
 | Organization | Salesforce enterprise / multiple-org landscape | Can contain multiple environments or business units. | Snowflake organization is a platform construct; Salesforce multi-org is usually an architecture/governance pattern. |
-| Database | Data domain, application data area, or Data 360 data space | High-level grouping of data. | Salesforce does not expose "databases" to app builders in the same way. |
+| Database | Data domain, application data area, or a Data 360 **data space** | High-level grouping of data with a tenancy/isolation boundary. | A Data 360 data space is a logical scope inside one Data 360 org (multi-brand, multi-region, multi-tenant use cases). Salesforce does not expose SQL "databases" to app builders in the same way. |
 | Schema | Salesforce object model area, package namespace, or Data 360 object grouping | Namespace / organization of metadata and objects. | Snowflake schema is a SQL namespace. Salesforce schema is metadata-driven object definitions and relationships. |
-| Table | Salesforce object; Data 360 Data Lake Object / Data Model Object | Stores records/rows with fields/columns. | Salesforce objects include UI, CRUD/FLS, validation, triggers/flows, ownership/sharing. Snowflake tables are analytical relational objects. |
+| Table | Salesforce object; Data 360 **Data Lake Object (DLO)** or **Data Model Object (DMO)** | Stores records/rows with fields/columns. | Salesforce objects include UI, CRUD/FLS, validation, triggers/flows, ownership/sharing. DLOs are raw ingested/federated tables; DMOs are the mapped, harmonized semantic layer. Snowflake tables are analytical relational objects. |
 | View / secure view | Report/list view/SOQL query; Data 360 calculated or mapped view-like consumption | Reusable filtered/projection layer over data. | Snowflake views are SQL objects; Salesforce reports/list views are app-layer experiences. |
 | Warehouse | No exact CRM equivalent | Compute resources execute work. | Snowflake exposes compute sizing/suspend/resume. Salesforce compute is managed behind governor limits, async jobs, and platform limits. |
 | Role | Permission set/profile/permission set group, plus role hierarchy | Both control access. | Snowflake roles are privilege containers and can inherit other roles. Salesforce role hierarchy mostly affects record access; object/field perms are profiles/permission sets. |
@@ -594,10 +594,10 @@ A practical enterprise pattern:
 | Masking policy | Field-level security, Shield Platform Encryption, Data Mask | Protects sensitive data. | Snowflake masking rewrites query results at runtime. Salesforce FLS hides fields; Shield encrypts; Data Mask is typically sandbox obfuscation. |
 | Row access policy | Sharing rules, role hierarchy, restriction rules, scoping rules | Row-level visibility. | Snowflake policy is SQL-evaluated at query time; Salesforce sharing is deeply integrated with CRM ownership and record access. |
 | Stage | Bulk API file, external object/lake landing zone, file import area | Used as a loading or external-data boundary. | Snowflake stages are SQL-addressable file locations for `COPY INTO`. |
-| Task/stream/dynamic table | Flow, scheduled flow, batch Apex, Data 360 data stream/calculated insight refresh | Automates data movement/transformation. | Snowflake tasks/streams are data-pipeline primitives; Salesforce automation is business-process/application logic. |
+| Task/stream/dynamic table | Flow, scheduled flow, batch Apex, Data 360 data stream / data transform / calculated insight refresh | Automates data movement/transformation. | Snowflake tasks/streams/dynamic tables are data-pipeline primitives inside the warehouse. Data 360 data streams ingest or federate; data transforms (batch/streaming) reshape DLOs into DMOs; calculated insights compute derived metrics. Salesforce Flow/Apex is business-process/application logic. |
 | UDF/Snowpark | Apex, Flow, external services, Data 360 calculated insights | Custom logic close to platform data. | Snowpark pushes Python/Java/Scala-style computation to Snowflake compute; Apex is transaction/app logic governed by Salesforce limits. |
 | Cortex / Cortex Agents | Einstein / Agentforce | AI and agents grounded in platform data, inside the platform's governance model. | Cortex is analytics-and-inference oriented with raw LLM access in SQL; Agentforce is business-process-action oriented with agents wired into CRM workflows. |
-| Secure share / listing | Salesforce data share / Data 360 share / package-style distribution | Share data or metadata with controlled consumers. | Snowflake sharing is data-product oriented and queryable by consumers; Salesforce sharing often affects app records and user access. |
+| Secure share / listing | Data 360 zero-copy data share (Iceberg-based) / Salesforce package distribution | Share data with controlled external consumers without copying it. | Snowflake sharing works across Snowflake accounts using its native sharing protocol. Data 360 shares its Lakehouse objects as Iceberg tables that Snowflake, Databricks, BigQuery, and other Iceberg-aware engines can consume via catalog integration. Salesforce record sharing is a separate concept and governs app-level user access. |
 
 ---
 
@@ -617,13 +617,13 @@ flowchart LR
     end
 
     subgraph LAKE["Lakehouse"]
-        ICE[(Open-format files<br/>Iceberg / Parquet in object storage)]
+        ICE[(Apache Iceberg v1<br/>Parquet + Open Catalog)]
     end
 
-    CRM -->|1 - ETL, ELT, CDC, Bulk API<br/>CRM data into Snowflake| WH
-    WH -->|2 - Query federation<br/>live access, no copy| D360
-    ICE -->|3 - File federation<br/>virtual external tables| D360
-    D360 -->|4 - Zero-copy share<br/>harmonized DLOs and DMOs| WH
+    CRM -->|1 - ETL, ELT, CDC, Bulk API 2.0<br/>CRM data into Snowflake| WH
+    WH -->|2 - Query federation<br/>live SQL pushdown, virtual DLOs| D360
+    ICE -->|3 - File federation<br/>Iceberg via Open Catalog| D360
+    D360 -->|4 - Zero-copy data share<br/>DLOs and DMOs as Iceberg| WH
     CRM <--> D360
 ```
 
@@ -633,9 +633,9 @@ Use this when Snowflake is the enterprise reporting, analytics, ML, or data-prod
 
 Common implementation options:
 
-- ETL/ELT tools such as MuleSoft, Fivetran, Informatica, Matillion, dbt pipelines, or custom APIs.
-- Salesforce Bulk API / CDC / Pub/Sub API patterns feeding landing tables and curated models.
-- Data 360 sharing patterns when the data has already been harmonized or modeled in Data 360 and Snowflake consumers need zero-copy access.
+- ETL/ELT tools such as MuleSoft Anypoint, Fivetran, Informatica, Matillion, dbt pipelines, or custom API integrations.
+- Salesforce Bulk API 2.0 / Change Data Capture (CDC) / Pub/Sub API feeding landing tables and curated models.
+- Data 360 zero-copy sharing (see direction 4 below) when the data has already been harmonized or modeled as DLOs/DMOs and Snowflake consumers need governed access without a copy pipeline.
 
 Good fit:
 
@@ -649,70 +649,89 @@ Watch-outs:
 - CRM data model semantics are not obvious from tables alone. Preserve source object names, record IDs, ownership fields, audit fields, picklist meanings, and relationship semantics.
 - Avoid turning Snowflake into an unmanaged dump of Salesforce objects. Create curated marts and semantic layers.
 
-### 2. Snowflake data into Data 360 using query federation
+### 2. Snowflake data into Data 360 using query federation (zero copy)
 
-Use this when Salesforce users, automations, segments, calculated insights, or agents need access to data that physically remains in Snowflake.
+Use this when Salesforce users, automations, segments, calculated insights, data graphs, or agents need access to data that physically remains in Snowflake. Salesforce currently does **not** ship a native "ingest/copy" connector for Snowflake in Data 360 — the standard Snowflake connector is a zero-copy federation connector. If you need to physically copy Snowflake data into Data 360, use MuleSoft Anypoint or another ELT tool.
 
 Conceptually:
 
-1. Create a Snowflake connection in Data 360.
-2. Data 360 discovers selected Snowflake databases/schemas/tables.
-3. Data 360 creates external Data Lake Object-style metadata for the selected data.
-4. You map the data to the Data 360 semantic model, usually Data Model Objects.
-5. When the data is used, Data 360 can federate the query back to Snowflake rather than ingesting all rows into Data 360.
-6. Optional acceleration/caching can be enabled for lower latency, but that changes the "pure live query" behavior because some queried data is cached in Data 360.
+1. Create a Snowflake connection in Data 360 (**Data Cloud Setup → External Integrations → Snowflake**). Two auth modes are supported:
+   - **Key-pair auth:** create an integration user in Snowflake, attach a public key, and provide the private key to Data 360.
+   - **Salesforce IdP auth (OIDC):** create a Snowflake `TYPE = SERVICE` user with `WORKLOAD_IDENTITY` and configure the ISSUER as your org's My Domain `/services/connectors`, using the external ID from Data 360 as the SUBJECT.
+2. Create a data stream selecting **Snowflake** as the source; Data 360 discovers databases/schemas/tables.
+3. Data 360 creates a Data Lake Object (DLO) for each selected table. Because the connector is zero-copy, these are **external/virtual DLOs** — pointers to the Snowflake table, not physical copies.
+4. Map the external DLOs into the Data 360 semantic model (usually Data Model Objects) alongside your other harmonized data.
+5. When the data is used, Data 360 federates the query back to Snowflake — pushing down filters and projections wherever possible — rather than pulling entire tables. Joins that span native and external DMOs are executed in Data 360 after the federated pushdown returns the needed rows.
+6. Optional **acceleration** (caching) can be enabled per data stream. When on, Data 360 pulls data into a local cache on a schedule, which reduces per-query latency and Snowflake credit burn but breaks the "pure live query" property. Turning acceleration off gives direct live query federation.
 
 Good fit:
 
 - Bring enterprise warehouse attributes into Salesforce experiences without copying large tables.
-- Use Snowflake facts/dimensions in segmentation, calculated insights, enrichment, or Agentforce context.
+- Use Snowflake facts/dimensions in segmentation, calculated insights, data graphs, enrichment, or Agentforce grounding.
 - Keep Snowflake as the governed source for large analytical datasets.
 
 Watch-outs:
 
-- "Zero copy" does not mean "zero cost." Snowflake warehouse credits and Data 360 consumption can still apply.
-- Query performance depends on Snowflake warehouse sizing, query shape, network path, predicate pushdown, selected columns, and whether acceleration/caching is enabled.
-- Design a dedicated Snowflake role, warehouse, and least-privilege access path for Data 360.
+- "Zero copy" does not mean "zero cost." Snowflake warehouse credits are billed for every federated query, and Data 360 has its own credit consumption model for federated workloads — see Salesforce's "Billing Considerations for Data Federation" help article.
+- Query performance depends on Snowflake warehouse sizing, query shape, network path, predicate pushdown, selected columns, and whether acceleration is enabled.
+- Design a dedicated Snowflake role and warehouse for Data 360 with least-privilege grants; do not reuse a shared BI service account.
+- Downstream Data 360 outputs (transforms, calculated insights, segments, data graphs, IDR) are materialized in the Data 360 Lakehouse, so they are **not** zero-copy — only the source-side DLO is virtual.
+- IP allowlisting the Data 360 egress ranges on the Snowflake side is required; **AWS PrivateLink is supported** for Snowflake query federation (see the "Private Connect for Data 360" help article), which addresses shared-IP-tenancy concerns.
 
 ### 3. Lake/files into Data 360 using file federation
 
-Use this when the source of truth is a data lake or lakehouse file/table format rather than a warehouse query endpoint.
+Use this when the source of truth is a data lake or lakehouse file/table format rather than a warehouse query endpoint. Unlike query federation (which asks a remote warehouse to run SQL), file federation has Data 360 read the files directly using its own query engine against an open catalog.
 
 Conceptually:
 
-1. Data is stored in cloud object storage, often in an open table/file format.
-2. Metadata describes the table/files.
-3. Data 360 uses that metadata to create virtual/external tables that can be mapped into the Data 360 model.
-4. Data 360 reads the files through the federation layer rather than requiring a traditional ETL copy first.
+1. Data is stored in cloud object storage (AWS S3 or Azure Data Lake Storage Gen2) as **Apache Iceberg v1** tables (Parquet data files + Iceberg metadata).
+2. An **open catalog** manages the table metadata. For the Snowflake-hosted case, this is **Snowflake Open Catalog** (formerly Polaris). Databricks File Federation, BigQuery, Redshift, and generic Iceberg REST catalogs each have their own connector.
+3. Data 360 authenticates to the catalog (for Snowflake Open Catalog, via a custom OAuth client registered in Snowflake) and receives short-lived, vended storage credentials — Data 360 does not accept long-lived storage keys.
+4. Data 360 creates external DLOs pointing at the Iceberg tables; you map them into DMOs like any other data.
+5. Data 360 reads the Parquet files directly through the federation layer at query time.
+
+Snowflake-side prerequisites worth knowing before you scope this:
+
+- Tables must be Iceberg v1 (V2 Merge-on-Read positional/equality deletes and V3 deletion vectors are **not** supported for querying).
+- Snowflake proprietary FDN tables cannot be file-federated as-is — you need Iceberg tables. Existing Delta tables can be exposed via UniForm (`delta.universalFormat.enabledFormats = 'iceberg'`).
+- Iceberg **views** are not supported.
+- `TIME` and `TIMESTAMP_NTZ` are not supported; several complex types (`VARIANT`, `OBJECT`, `ARRAY`, `GEOGRAPHY`, `GEOMETRY`, `BINARY`) are not supported either.
+- Change data capture on file-federated tables is not available (Open Catalog does not expose the parent snapshot Data 360 would need), so features like Data Actions cannot track row-level changes.
+- **AWS PrivateLink / Azure Private Link are not supported** for Snowflake File Federation; both Open Catalog and the storage bucket must be publicly reachable (Data 360 IPs allowlisted).
 
 Good fit:
 
-- Enterprise lakehouse architecture where curated customer/provider/product data is already stored in open formats.
+- Enterprise lakehouse architecture where curated data is already stored in Iceberg.
 - Large append-heavy analytical datasets where copying into every consuming platform is expensive.
 - Architectures where Snowflake, Spark, Databricks, and Data 360 need to participate around shared lakehouse data.
 
-Where Snowflake fits:
+Choose query federation vs. file federation:
 
-- Snowflake can query and manage Iceberg tables depending on catalog/storage design.
-- Data 360 file federation can bind lakehouse data into Salesforce use cases.
-- The shared architectural principle is to reduce unnecessary copies, but the implementation differs: Snowflake uses warehouses/catalogs/external volumes; Data 360 uses federation and mapping into its data model.
+- **Query federation** — you want live SQL semantics, pushdowns, and everything Snowflake supports (views, complex types, V2 MoR tables). Cost is a Snowflake warehouse per query.
+- **File federation** — you want to bypass the Snowflake compute layer entirely and read straight from the object store via Open Catalog. Cheaper per query at scale, but with the Iceberg-only and no-CDC constraints above.
 
 ### 4. Data 360 data into Snowflake using zero-copy sharing
 
-Use this when Data 360 has harmonized customer/profile/engagement data and Snowflake consumers need to query it.
+Use this when Data 360 has harmonized customer/profile/engagement data and Snowflake consumers need to query it. This is the direction opposite to (2) and (3): the data lives in Data 360's Iceberg-backed Lakehouse, and Snowflake reads it directly.
 
 Conceptually:
 
-1. Create a Data 360 data share for selected Data Lake Objects or Data Model Objects.
-2. Link it to a Snowflake data share target.
-3. In Snowflake, the consumer sees the share under Private Sharing / Direct Shares and creates a database from it.
-4. Snowflake users query the shared data without building a copy pipeline from Data 360.
+1. In Data 360, create a **data share target** pointing at a Snowflake account, then create a **data share** listing the DLOs/DMOs to expose.
+2. Data 360 publishes the selected objects as Iceberg tables in its Lakehouse and registers them with an Iceberg catalog that Snowflake can read.
+3. In Snowflake, the consumer creates a **catalog-linked database** (or an Iceberg external table via catalog integration) against the Data 360-managed catalog.
+4. Snowflake users query the shared data with normal SQL — no `COPY INTO`, no data pipeline, and no duplicate storage.
 
 Good fit:
 
-- BI and data science teams want access to harmonized Data 360 outputs.
-- Snowflake remains the enterprise analytics workbench, while Data 360 remains the Salesforce activation/context layer.
-- Teams need a governed handoff from Data 360 to warehouse consumers.
+- BI and data science teams want governed access to harmonized Data 360 outputs (unified profiles, calculated insights, segments) from Snowflake.
+- Snowflake remains the enterprise analytics workbench, while Data 360 remains the Salesforce activation/agent-context layer.
+- Teams need a governed handoff from Data 360 to warehouse consumers without a copy pipeline.
+
+Watch-outs:
+
+- The Data 360 side owns the schema and lifecycle of the shared objects — Snowflake consumers should treat these tables as read-only.
+- Iceberg-table caveats apply on the Snowflake side (some operations behave differently from native FDN tables, e.g. clustering and Time Travel semantics).
+- As with query federation, "zero copy" ≠ "zero cost": Snowflake still charges warehouse credits for reads, and Data 360 charges for the share.
 
 ---
 
@@ -724,7 +743,7 @@ A clean architecture is not "copy everything everywhere." A better pattern is:
 - **Snowflake:** enterprise warehouse/lakehouse, historical analytics, curated marts, heavy transformations, BI/ML/data science, governed data products.
 - **Data 360:** harmonized customer/entity model, identity resolution, segmentation, calculated insights, activation, enrichment, and AI/Agentforce context.
 
-Data 360 becomes the binding layer when it maps CRM data, Snowflake data, and lake data into a common business model. That model can then power Salesforce actions: personalization, service experiences, marketing journeys, calculated insights, agent context, related lists/enrichment, and downstream shares.
+Data 360 becomes the binding layer when it maps CRM data, Snowflake data, and lake data into a common business model (DMOs, data graphs, unified individual/account profiles). That model can then power Salesforce actions: personalization, service experiences, marketing journeys, calculated insights, Agentforce grounding, related lists/enrichment, and downstream zero-copy shares back to Snowflake.
 
 Design principle:
 
